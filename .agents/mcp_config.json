@@ -1,0 +1,5 @@
+﻿{
+  $schema: https://raw.githubusercontent.com/google-gemini/antigravity/main/schemas/mcp_config.schema.json,
+  comment: Car Dynasty workspace MCP config. Add Database/Media MCP here only when architecture requires it.,
+  mcpServers: {}
+}

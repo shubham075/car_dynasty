@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #070809;
+  --bg-surface: #0f1113;
+  --bg-surface-elevated: #16181b;
+  --text-primary: #f4f5f7;
+  --text-secondary: #9ea3ae;
+  --text-muted: #5e6472;
+  --accent: #ff4d00;
+  --accent-glow: rgba(255, 77, 0, 0.22);
+  --accent-blue: #00d2ff;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(255, 255, 255, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  background-color: var(--bg-primary);
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Cinematic Typography Utilities */
+.font-display {
+  font-family: var(--font-display), "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.font-mono-tech {
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+  font-feature-settings: "zero" 1;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #08090a;
+}
+::-webkit-scrollbar-thumb {
+  background: #23272d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff4d00;
+}
+
+/* Reduced Motion Safety */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Background Texture System ─────────────────────────────────── */
+/* Uses body::before pseudo-element so it sits above the bg-color  */
+/* but below all content. Class toggled by TextureDevToolbar.       */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: none;
+  background-repeat: repeat;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* Matte Carbon Fiber */
+body.texture-carbon::before {
+  background-image: url('/assets/textures/carbon.jpg');
+  background-size: 400px 400px;
+  opacity: 0.18;
+  mix-blend-mode: luminosity;
+}
+
+/* Midnight Asphalt */
+body.texture-asphalt::before {
+  background-image: url('/assets/textures/asphalt.jpg');
+  background-size: 600px 600px;
+  opacity: 0.22;
+  mix-blend-mode: luminosity;
+}
+
+/* Brushed Gunmetal */
+body.texture-metal::before {
+  background-image: url('/assets/textures/metal.jpg');
+  background-size: 900px 900px;
+  opacity: 0.16;
+  mix-blend-mode: luminosity;
+}
