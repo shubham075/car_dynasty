@@ -1,13 +1,14 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PROJECTS } from "@/data/projects";
-import { CREATOR_DATA } from "@/data/creator";
+import { getProjectBySlug, getProjects, getSite } from "@/cms/content";
+import { getSection } from "@/cms/settings";
 import { Navbar } from "@/components/common/Navbar";
 import { Footer } from "@/components/common/Footer";
 import { Container } from "@/components/common/Container";
-import { Button } from "@/components/common/Button";
+import { BookButton } from "@/components/contact/BookButton";
 import {
   ArrowLeft,
   Camera,
@@ -20,9 +21,30 @@ import {
 } from "lucide-react";
 
 export function generateStaticParams() {
-  return PROJECTS.map((project) => ({
+  return getProjects().map((project) => ({
     slug: project.slug,
   }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const project = getProjectBySlug(slug);
+  if (!project) return {};
+  const site = getSite();
+  const title = project.seoTitle || `${project.title} | ${site.brandName}`;
+  const description = project.seoDescription || project.subtitle || project.brief;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/projects/${project.slug}` },
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      images: project.heroImage ? [{ url: project.heroImage, alt: project.title }] : [],
+    },
+    twitter: { card: "summary_large_image", title, description, images: project.heroImage ? [project.heroImage] : [] },
+  };
 }
 
 export default async function ProjectPage({
@@ -31,15 +53,18 @@ export default async function ProjectPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = PROJECTS.find((p) => p.slug === slug);
+  const project = getProjectBySlug(slug);
 
   if (!project) {
     notFound();
   }
 
+  const site = getSite();
+  const page = getSection("projectPage");
+
   return (
     <div className="min-h-screen bg-[#070809] flex flex-col text-zinc-100">
-      <Navbar />
+      <Navbar site={site} nav={getSection("nav")} />
 
       <main className="flex-1 pt-28 pb-20">
         <Container size="default">
@@ -50,7 +75,7 @@ export default async function ProjectPage({
               className="inline-flex items-center gap-2 font-mono-tech text-xs uppercase tracking-wider text-zinc-400 hover:text-[#ff4d00] transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Film Showcase</span>
+              <span>{page.backLabel}</span>
             </Link>
           </div>
 
@@ -88,12 +113,12 @@ export default async function ProjectPage({
             {/* Viewfinder HUD */}
             <div className="absolute top-4 left-4 flex items-center gap-2 font-mono-tech text-[11px] text-zinc-300">
               <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-              <span>MASTER FILE // 4K 2.39:1</span>
+              <span>{page.viewfinderLabel}</span>
             </div>
 
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-mono-tech text-xs text-zinc-300">
               <span>{project.location}</span>
-              <span className="hidden sm:block">DIRECTED BY {CREATOR_DATA.name.toUpperCase()}</span>
+              <span className="hidden sm:block">DIRECTED BY {site.name.toUpperCase()}</span>
             </div>
           </div>
 
@@ -243,37 +268,35 @@ export default async function ProjectPage({
           <div className="p-8 md:p-12 bg-[#0e1013] border border-white/15 flex flex-col md:flex-row items-center justify-between gap-8">
             <div>
               <span className="font-mono-tech text-xs text-[#ff4d00] uppercase tracking-wider">
-                COMMISSION THE TEAM
+                {page.ctaEyebrow}
               </span>
               <h3 className="font-display text-3xl sm:text-4xl text-white mt-1">
-                COMMISSION A SIMILAR AUTOMOTIVE PRODUCTION
+                {page.ctaTitle}
               </h3>
               <p className="text-sm text-zinc-400 max-w-xl mt-2">
-                Deploying across Bhopal and Pan-India. Let's create an unforgettable visual campaign for your machine or brand.
+                {page.ctaText}
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
               <a
-                href={CREATOR_DATA.contacts.whatsappUrl}
+                href={site.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-3.5 bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-500 text-emerald-400 font-mono-tech text-xs uppercase tracking-wider flex items-center gap-2 transition-all"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>WhatsApp Directly</span>
+                <span>{page.whatsappLabel}</span>
               </a>
-              <Link href="/#contact">
-                <Button variant="primary" size="md" icon={<Sparkles className="w-4 h-4" />}>
-                  Book Shoot
-                </Button>
-              </Link>
+              <BookButton variant="primary" size="md" cta="project-page" refName={project.title} icon={<Sparkles className="w-4 h-4" />}>
+                {page.bookLabel}
+              </BookButton>
             </div>
           </div>
         </Container>
       </main>
 
-      <Footer />
+      <Footer site={site} footer={getSection("footer")} />
     </div>
   );
 }

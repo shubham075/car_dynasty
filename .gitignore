@@ -33,3 +33,6 @@ Thumbs.db
 *.swp
 *.swo
 .idea/
+
+# CMS runtime data (SQLite database + uploads)
+/data/

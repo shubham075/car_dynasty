@@ -5,14 +5,18 @@ import { Container } from "@/components/common/Container";
 import { Button } from "@/components/common/Button";
 import { VideoPlayer } from "@/components/media/VideoPlayer";
 import { ArrowRight, MessageSquare, Play } from "lucide-react";
-import { CREATOR_DATA } from "@/data/creator";
+import { useBooking } from "@/components/contact/BookingProvider";
+import type { Site } from "@/cms/content";
+import type { SectionValue } from "@/cms/schema";
 import { gsap } from "gsap";
 
 interface HeroSectionProps {
-  onOpenBooking: () => void;
+  hero: SectionValue<"hero">;
+  site: Pick<Site, "name" | "whatsappUrl">;
 }
 
-export function HeroSection({ onOpenBooking }: HeroSectionProps) {
+export function HeroSection({ hero, site }: HeroSectionProps) {
+  const { open } = useBooking();
   const containerRef = useRef<HTMLElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
   const subheadRef = useRef<HTMLParagraphElement>(null);
@@ -69,27 +73,28 @@ export function HeroSection({ onOpenBooking }: HeroSectionProps) {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#121417] border border-white/10 text-[#ff4d00] font-mono-tech text-xs tracking-wider uppercase">
             <span className="w-2 h-2 rounded-full bg-[#ff4d00] animate-ping" />
-            <span>DIRECTED BY {CREATOR_DATA.name.toUpperCase()}</span>
+            <span>DIRECTED BY {site.name.toUpperCase()}</span>
             <span className="text-zinc-600">/</span>
-            <span className="text-zinc-300">BHOPAL • PAN-INDIA</span>
+            <span className="text-zinc-300">{hero.locationChip}</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-4 font-mono-tech text-[11px] text-zinc-400">
-            <span>SHUTTER: 180°</span>
-            <span>•</span>
-            <span>ASPECT: 2.39:1</span>
-            <span>•</span>
-            <span>COLOR: ARRI LOG-C</span>
+            {hero.viewfinder.map((item, i) => (
+              <React.Fragment key={item}>
+                {i > 0 && <span>•</span>}
+                <span>{item}</span>
+              </React.Fragment>
+            ))}
           </div>
         </div>
 
         {/* Cinematic Headline */}
         <div className="max-w-5xl mb-8">
           <h1 ref={headlineRef} className="font-display text-5xl sm:text-7xl md:text-8xl lg:text-9xl text-white tracking-tight leading-[0.9]">
-            CINEMATIC <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff4d00] via-orange-400 to-amber-200">AUTOMOTIVE</span> STORYTELLING
+            {hero.headlinePre} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff4d00] via-orange-400 to-amber-200">{hero.headlineAccent}</span> {hero.headlinePost}
           </h1>
           <p ref={subheadRef} className="mt-6 text-base sm:text-lg md:text-xl text-zinc-400 max-w-3xl leading-relaxed">
-            High-end commercial films, raw car culture documentaries, and hypercar showcases. Delivering editorial visual power across India for brands, car meets, and discerning collectors.
+            {hero.subhead}
           </p>
         </div>
 
@@ -98,20 +103,20 @@ export function HeroSection({ onOpenBooking }: HeroSectionProps) {
           <Button
             variant="primary"
             size="lg"
-            onClick={onOpenBooking}
+            onClick={() => open({ cta: "hero" })}
             icon={<ArrowRight className="w-4 h-4" />}
           >
-            Discuss A Project
+            {hero.primaryCta}
           </Button>
 
           <a
-            href={CREATOR_DATA.contacts.whatsappUrl}
+            href={site.whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3.5 bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-900/50 text-emerald-400 font-mono-tech text-xs uppercase tracking-wider transition-all"
           >
             <MessageSquare className="w-4 h-4" />
-            <span>WhatsApp Directly</span>
+            <span>{hero.whatsappCta}</span>
           </a>
 
           <a
@@ -119,15 +124,16 @@ export function HeroSection({ onOpenBooking }: HeroSectionProps) {
             className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/5 border border-white/10 hover:border-white/30 text-zinc-300 hover:text-white font-mono-tech text-xs uppercase tracking-wider transition-all"
           >
             <Play className="w-3.5 h-3.5 text-[#ff4d00]" />
-            <span>Selected Works</span>
+            <span>{hero.secondaryCta}</span>
           </a>
         </div>
 
         {/* HERO VIDEO / POSTER SHOWCASE */}
         <div ref={videoRef} className="relative rounded-none border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.9)] transform-origin-top" data-cursor="view">
           <VideoPlayer
-            posterSrc="/assets/hero/hero-poster.jpg"
-            title="CAR DYNASTY // MASTER CINEMATIC REEL 2026"
+            posterSrc={hero.poster}
+            videoSrc={hero.videoUrl || undefined}
+            title={hero.reelTitle}
             aspectRatio="21/9"
           />
         </div>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Camera, ArrowRight } from "lucide-react";
-import { Project } from "@/data/projects";
+import type { Project } from "@/cms/content";
 
 gsap.registerPlugin(ScrollTrigger);
 

@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { CREATOR_DATA } from "@/data/creator";
 import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
+import type { Site } from "@/cms/content";
+import type { SectionValue } from "@/cms/schema";
 
 function YoutubeIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -29,7 +30,7 @@ function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-export function Footer() {
+export function Footer({ site, footer, subscribers }: { site: Site; footer: SectionValue<"footer">; subscribers?: string }) {
   return (
     <footer className="bg-[#050607] border-t border-white/10 pt-16 pb-12 text-zinc-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,84 +39,69 @@ export function Footer() {
           <div className="md:col-span-5 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 bg-[#121417] border border-white/15 flex items-center justify-center text-[#ff4d00] font-display text-xl">
-                CD
+                {site.monogram}
               </span>
               <span className="font-display text-3xl tracking-wider text-white">
-                CAR DYNASTY
+                {site.brandName.toUpperCase()}
               </span>
             </div>
-            <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
-              Automotive cinematography, commercial storytelling, and car culture documentation. Directed by {CREATOR_DATA.name}. Based in Bhopal, deploying across India.
-            </p>
+            <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">{footer.description}</p>
             <div className="flex items-center gap-2 text-xs font-mono-tech text-zinc-400">
               <MapPin className="w-3.5 h-3.5 text-[#ff4d00]" />
-              <span>Bhopal, Madhya Pradesh • Pan-India Shoots</span>
+              <span>{footer.locationLine}</span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="md:col-span-3 flex flex-col gap-3">
             <h4 className="font-mono-tech text-xs uppercase tracking-widest text-zinc-200">
-              Navigation
+              {footer.navHeading}
             </h4>
             <ul className="flex flex-col gap-2 text-sm">
-              <li>
-                <Link href="#work" className="hover:text-[#ff4d00] transition-colors">
-                  Commercial & Feature Films
-                </Link>
-              </li>
-              <li>
-                <Link href="#capabilities" className="hover:text-[#ff4d00] transition-colors">
-                  Production Packages
-                </Link>
-              </li>
-              <li>
-                <Link href="#bts" className="hover:text-[#ff4d00] transition-colors">
-                  Behind The Frame / Grade
-                </Link>
-              </li>
-              <li>
-                <Link href="#about" className="hover:text-[#ff4d00] transition-colors">
-                  Apoorva Shrivastava
-                </Link>
-              </li>
+              {footer.links.map((link) => (
+                <li key={link.href + link.label}>
+                  <Link href={link.href.startsWith("#") ? `/${link.href}` : link.href} className="hover:text-[#ff4d00] transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Direct Contact & Social */}
           <div className="md:col-span-4 flex flex-col gap-3">
             <h4 className="font-mono-tech text-xs uppercase tracking-widest text-zinc-200">
-              Direct Contact
+              {footer.contactHeading}
             </h4>
             <div className="flex flex-col gap-2.5 text-sm">
               <a
-                href={`mailto:${CREATOR_DATA.contacts.email}`}
+                href={`mailto:${site.email}`}
                 className="flex items-center gap-2 hover:text-[#ff4d00] transition-colors font-mono-tech text-xs"
               >
                 <Mail className="w-4 h-4 text-[#ff4d00]" />
-                <span>{CREATOR_DATA.contacts.email}</span>
+                <span>{site.email}</span>
               </a>
               <a
-                href={`tel:${CREATOR_DATA.contacts.phone}`}
+                href={`tel:${site.phone.replace(/\s+/g, "")}`}
                 className="flex items-center gap-2 hover:text-[#ff4d00] transition-colors font-mono-tech text-xs"
               >
                 <Phone className="w-4 h-4 text-[#ff4d00]" />
-                <span>{CREATOR_DATA.contacts.phone}</span>
+                <span>{site.phone}</span>
               </a>
             </div>
 
-            <div className="pt-4 flex items-center gap-3">
+            <div className="pt-4 flex flex-wrap items-center gap-3">
               <a
-                href={CREATOR_DATA.social.youtube}
+                href={site.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 bg-white/5 border border-white/10 hover:border-red-500 hover:text-red-500 transition-colors"
-                title="YouTube Channel (16K+ Subs)"
+                title={subscribers ? `YouTube Channel (${subscribers} Subs)` : "YouTube Channel"}
               >
                 <YoutubeIcon className="w-4 h-4" />
               </a>
               <a
-                href={CREATOR_DATA.social.instagram}
+                href={site.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 bg-white/5 border border-white/10 hover:border-pink-500 hover:text-pink-500 transition-colors"
@@ -123,13 +109,24 @@ export function Footer() {
               >
                 <InstagramIcon className="w-4 h-4" />
               </a>
+              {site.extraLinks.map((l) => (
+                <a
+                  key={l.url}
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 bg-white/5 border border-white/10 hover:border-[#ff4d00] hover:text-[#ff4d00] font-mono-tech text-xs transition-colors"
+                >
+                  {l.label}
+                </a>
+              ))}
               <a
-                href={CREATOR_DATA.contacts.whatsappUrl}
+                href={site.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-mono-tech text-xs hover:border-emerald-500"
               >
-                <span>WhatsApp Chat</span>
+                <span>{footer.whatsappLabel}</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -139,14 +136,15 @@ export function Footer() {
         {/* Legal & Meta */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono-tech text-zinc-400">
           <div>
-            © {new Date().getFullYear()} CAR DYNASTY. All rights reserved. Directed by Apoorva Shrivastava.
+            © {new Date().getFullYear()} {footer.copyright}
           </div>
           <div className="flex items-center gap-4 text-zinc-400">
-            <span>4K CINEMA</span>
-            <span>•</span>
-            <span>ANAMORPHIC RIGS</span>
-            <span>•</span>
-            <span>FPV DRONE</span>
+            {footer.tags.map((tag, i) => (
+              <React.Fragment key={tag}>
+                {i > 0 && <span>•</span>}
+                <span>{tag}</span>
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>
