@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up the Car Dynasty database to S3
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=cardynasty
+Group=cardynasty
+ExecStart=/bin/bash /opt/cardynasty/app/deploy/backup.sh

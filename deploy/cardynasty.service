@@ -1,0 +1,29 @@
+# systemd unit: runs the Next.js app as an unprivileged user, restarts it if it
+# crashes, and starts it on boot. Install: sudo cp deploy/cardynasty.service /etc/systemd/system/
+[Unit]
+Description=Car Dynasty website (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cardynasty
+Group=cardynasty
+WorkingDirectory=/opt/cardynasty/app
+EnvironmentFile=/etc/cardynasty/app.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# Listen on localhost only: the public reaches the app through Caddy (HTTPS).
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=on-failure
+RestartSec=5
+
+# Hardening: the app may only write to its data directory.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/cardynasty /opt/cardynasty/app/.next
+
+[Install]
+WantedBy=multi-user.target

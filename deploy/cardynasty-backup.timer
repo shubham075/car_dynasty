@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Car Dynasty database backup
+
+[Timer]
+# 02:30 IST (21:00 UTC); runs on the next boot if the server was off.
+OnCalendar=*-*-* 21:00:00 UTC
+Persistent=true
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target

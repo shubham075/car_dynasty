@@ -1,0 +1,18 @@
+# Caddy: public entry point. Gets and renews a free Let's Encrypt HTTPS
+# certificate automatically, redirects http → https, and forwards to Next.js.
+# Install: sudo cp deploy/Caddyfile /etc/caddy/Caddyfile, then replace the domain.
+
+cardynasty.example.com, www.cardynasty.example.com {
+	encode zstd gzip
+
+	# Caddy sets X-Forwarded-For itself and ignores values sent by visitors,
+	# which is what TRUSTED_PROXY_HOPS=1 in app.env relies on.
+	reverse_proxy 127.0.0.1:3000
+
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 20MiB
+			roll_keep 5
+		}
+	}
+}
