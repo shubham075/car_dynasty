@@ -12,10 +12,11 @@ export type FormState = { ok: boolean; message: string } | undefined;
 const manageSchema = z.object({
   status: z.enum(STATUS_VALUES),
   followUp: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a valid date")]),
-  quote: z.union([
-    z.literal(""),
-    z.coerce.number({ message: "Quote must be a number" }).int("Quote must be a whole number").min(0).max(100_000_000),
-  ]),
+  quote: z
+    .string()
+    .regex(/^\d*$/, "Quote must be a number")
+    .refine((v) => v === "" || Number(v) <= 100_000_000, "Quote is too large")
+    .transform((v) => (v === "" ? "" : Number(v))),
 });
 
 async function existing(id: number) {

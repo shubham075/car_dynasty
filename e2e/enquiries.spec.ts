@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { freshIp, signIn } from "./helpers";
+import { freshIp, signInAsAdmin } from "./helpers";
 
 const runTag = `zz${crypto.randomBytes(3).toString("hex")}`;
 
@@ -42,7 +42,7 @@ test("enquiries list requires sign-in", async ({ page }) => {
 test("a website enquiry shows up in the list as New", async ({ page, request }) => {
   const name = `List Check ${runTag}`;
   const reference = await submitEnquiry(request, { name });
-  await signIn(page);
+  await signInAsAdmin(page);
   await page.goto(`/admin/enquiries?q=${encodeURIComponent(name)}`);
   const row = page.getByTestId("enquiry-row");
   await expect(row).toHaveCount(1);
@@ -54,7 +54,7 @@ test("a website enquiry shows up in the list as New", async ({ page, request }) 
 test("status, follow-up and quote are saved and logged in the timeline", async ({ page, request }) => {
   const name = `Manage Check ${runTag}`;
   await submitEnquiry(request, { name });
-  await signIn(page);
+  await signInAsAdmin(page);
   await openEnquiry(page, name);
 
   await page.getByLabel("Status").selectOption("quoted");
@@ -81,7 +81,7 @@ test("status, follow-up and quote are saved and logged in the timeline", async (
 test("an invalid quote is rejected without saving", async ({ page, request }) => {
   const name = `Invalid Quote ${runTag}`;
   await submitEnquiry(request, { name });
-  await signIn(page);
+  await signInAsAdmin(page);
   await openEnquiry(page, name);
   await page.getByLabel("Quote (₹)").fill("lots");
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -93,7 +93,7 @@ test("an invalid quote is rejected without saving", async ({ page, request }) =>
 test("notes are added to the timeline and starring works", async ({ page, request }) => {
   const name = `Notes Check ${runTag}`;
   await submitEnquiry(request, { name });
-  await signIn(page);
+  await signInAsAdmin(page);
   await openEnquiry(page, name);
 
   const note = page.getByLabel("Add a note");
@@ -111,7 +111,7 @@ test("notes are added to the timeline and starring works", async ({ page, reques
 test("CSV export follows the filter, neutralises formulas, and needs a session", async ({ page, request, playwright, baseURL }) => {
   const name = `Csv Check ${runTag}`;
   await submitEnquiry(request, { name, details: '=HYPERLINK("http://evil.example","click")' });
-  await signIn(page);
+  await signInAsAdmin(page);
 
   const res = await page.request.get(`/admin/enquiries/export?q=${encodeURIComponent(name)}`);
   expect(res.status()).toBe(200);
@@ -122,15 +122,28 @@ test("CSV export follows the filter, neutralises formulas, and needs a session",
   expect(lines[1]).toContain(name);
   expect(lines[1]).toContain(`"'=HYPERLINK(""http://evil.example"",""click"")"`);
 
+  // No cookie: the proxy bounces to the login page before the route runs.
   const anon = await playwright.request.newContext({ baseURL });
-  expect((await anon.get("/admin/enquiries/export")).status()).toBe(401);
+  const bounced = await anon.get("/admin/enquiries/export", { maxRedirects: 0 });
+  expect(bounced.status()).toBe(307);
+  expect(bounced.headers()["location"]).toContain("/admin/login");
   await anon.dispose();
+
+  // Forged cookie gets past the proxy; the route's own session check must refuse it.
+  const forged = await playwright.request.newContext({
+    baseURL,
+    extraHTTPHeaders: { cookie: "cd_session=forged-token-value" },
+  });
+  const refused = await forged.get("/admin/enquiries/export", { maxRedirects: 0 });
+  expect(refused.status()).toBe(401);
+  expect(await refused.text()).not.toContain(name);
+  await forged.dispose();
 });
 
 test("delete asks for confirmation, then removes the enquiry", async ({ page, request }) => {
   const name = `Delete Check ${runTag}`;
   await submitEnquiry(request, { name });
-  await signIn(page);
+  await signInAsAdmin(page);
   await openEnquiry(page, name);
   const detailUrl = page.url();
 

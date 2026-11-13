@@ -14,6 +14,12 @@ export async function freshIp(page: Page) {
   await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
 }
 
+/** Signs in as the e2e admin and waits until the session cookie is set (dashboard loaded). */
+export async function signInAsAdmin(page: Page) {
+  await signIn(page);
+  await page.waitForURL(/\/admin$/);
+}
+
 export async function signIn(page: Page, email = ADMIN.email, password = ADMIN.password) {
   await page.goto("/admin/login");
   await page.getByLabel("Email").fill(email);
