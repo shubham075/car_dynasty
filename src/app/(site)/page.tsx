@@ -1,4 +1,6 @@
 import React from "react";
+import Image from "next/image";
+import { youtubeId, youtubeThumb } from "@/lib/youtube";
 import { Navbar } from "@/components/common/Navbar";
 import { Footer } from "@/components/common/Footer";
 import { Container } from "@/components/common/Container";
@@ -269,6 +271,17 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="p-5 bg-[#0e1013] border border-white/10 flex flex-col justify-between hover:border-red-500/50 transition-all group"
                   >
+                    {youtubeId(yt.url) && (
+                      <div className="relative -mx-5 -mt-5 mb-4 aspect-video overflow-hidden bg-black">
+                        <Image
+                          src={youtubeThumb(youtubeId(yt.url)!)}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-cover opacity-80 transition-all duration-500 group-hover:scale-105 group-hover:opacity-100"
+                        />
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center justify-between font-mono-tech text-[10px] text-zinc-400 mb-3">
                         <span className="text-red-400 uppercase">{yt.category}</span>

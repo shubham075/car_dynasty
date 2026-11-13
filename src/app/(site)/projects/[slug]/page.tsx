@@ -9,6 +9,7 @@ import { Navbar } from "@/components/common/Navbar";
 import { Footer } from "@/components/common/Footer";
 import { Container } from "@/components/common/Container";
 import { BookButton } from "@/components/contact/BookButton";
+import { youtubeEmbed, youtubeId } from "@/lib/youtube";
 import {
   ArrowLeft,
   Camera,
@@ -61,6 +62,17 @@ export default async function ProjectPage({
 
   const site = getSite();
   const page = getSection("projectPage");
+  const videoId = youtubeId(project.videoUrl);
+  const specs = (
+    [
+      ["Primary Camera", project.techSpecs.camera],
+      ["Optics / Lenses", project.techSpecs.lens],
+      ["Rigging System", project.techSpecs.rig],
+      ["Capture Resolution", project.techSpecs.resolution],
+      ["Framerate", project.techSpecs.framerate],
+      ["Color Pipeline", project.techSpecs.colorGrade],
+    ] as const
+  ).filter(([, v]) => v);
 
   return (
     <div className="min-h-screen bg-[#070809] flex flex-col text-zinc-100">
@@ -98,7 +110,20 @@ export default async function ProjectPage({
             </p>
           </div>
 
-          {/* Hero Media Display */}
+          {/* Hero Media Display: the YouTube video when there is one, otherwise the still */}
+          {videoId ? (
+            <div className="relative aspect-video w-full overflow-hidden border border-white/15 bg-black shadow-2xl mb-12">
+              <iframe
+                src={youtubeEmbed(videoId)}
+                title={project.title}
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+          ) : (
           <div className="relative aspect-[21/9] w-full overflow-hidden border border-white/15 bg-black shadow-2xl mb-12">
             <Image
               src={project.heroImage}
@@ -121,6 +146,7 @@ export default async function ProjectPage({
               <span className="hidden sm:block">DIRECTED BY {site.name.toUpperCase()}</span>
             </div>
           </div>
+          )}
 
           {/* Metadata Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 bg-[#0e1013] border border-white/10 mb-16 font-mono-tech text-xs">
@@ -145,16 +171,19 @@ export default async function ProjectPage({
           {/* Narrative & Direction */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
             <div className="md:col-span-7 flex flex-col gap-6">
+              {project.brief && (
               <div>
                 <span className="font-mono-tech text-xs uppercase tracking-widest text-[#ff4d00]">
                   THE ASSIGNMENT
                 </span>
                 <h3 className="font-display text-2xl text-white mt-1">THE BRIEF</h3>
-                <p className="text-sm text-zinc-300 mt-2 leading-relaxed">
+                <p className="text-sm text-zinc-300 mt-2 leading-relaxed whitespace-pre-line">
                   {project.brief}
                 </p>
               </div>
+              )}
 
+              {project.creativeDirection && (
               <div>
                 <span className="font-mono-tech text-xs uppercase tracking-widest text-[#ff4d00]">
                   APPROACH
@@ -164,6 +193,7 @@ export default async function ProjectPage({
                   {project.creativeDirection}
                 </p>
               </div>
+              )}
 
               <div>
                 <span className="font-mono-tech text-xs uppercase tracking-widest text-[#ff4d00]">
@@ -178,6 +208,7 @@ export default async function ProjectPage({
 
             {/* Technical Camera & Rig Specs Box */}
             <div className="md:col-span-5 bg-[#0b0d10] border border-white/10 p-6 md:p-8 flex flex-col justify-between">
+              {specs.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-4 text-[#ff4d00]">
                   <Camera className="w-5 h-5" />
@@ -187,34 +218,17 @@ export default async function ProjectPage({
                 </div>
 
                 <div className="flex flex-col gap-3 font-mono-tech text-xs divide-y divide-white/5">
-                  <div className="pt-2">
-                    <span className="text-zinc-500 block text-[11px]">Primary Camera</span>
-                    <span className="text-zinc-200">{project.techSpecs.camera}</span>
-                  </div>
-                  <div className="pt-2">
-                    <span className="text-zinc-500 block text-[11px]">Optics / Lenses</span>
-                    <span className="text-zinc-200">{project.techSpecs.lens}</span>
-                  </div>
-                  <div className="pt-2">
-                    <span className="text-zinc-500 block text-[11px]">Rigging System</span>
-                    <span className="text-zinc-200">{project.techSpecs.rig}</span>
-                  </div>
-                  <div className="pt-2">
-                    <span className="text-zinc-500 block text-[11px]">Capture Resolution</span>
-                    <span className="text-zinc-200">{project.techSpecs.resolution}</span>
-                  </div>
-                  <div className="pt-2">
-                    <span className="text-zinc-500 block text-[11px]">Framerate</span>
-                    <span className="text-zinc-200">{project.techSpecs.framerate}</span>
-                  </div>
-                  <div className="pt-2">
-                    <span className="text-zinc-500 block text-[11px]">Color Pipeline</span>
-                    <span className="text-zinc-200">{project.techSpecs.colorGrade}</span>
-                  </div>
+                  {specs.map(([label, value]) => (
+                    <div key={label} className="pt-2">
+                      <span className="text-zinc-500 block text-[11px]">{label}</span>
+                      <span className="text-zinc-200">{value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
+              )}
 
-              <div className="mt-8 pt-6 border-t border-white/10">
+              <div className={specs.length > 0 ? "mt-8 pt-6 border-t border-white/10" : ""}>
                 <span className="font-mono-tech text-[11px] uppercase tracking-wider text-zinc-400 block mb-2">
                   Delivered Assets:
                 </span>

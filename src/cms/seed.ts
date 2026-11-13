@@ -4,60 +4,11 @@ import path from "node:path";
 import type { Db } from "./repo";
 import { insertRow } from "./repo";
 import { RESOURCES, SECTIONS } from "./schema";
+import { applyContent, buildContent } from "./core/youtube-content.mjs";
+import snapshot from "./youtube-snapshot.json";
 
-// First-run content: the portfolio exactly as it was hard-coded before the CMS.
-
-const CATEGORIES = [
-  { name: "Supercar Showcase", slug: "supercar-showcase", showInFilter: true },
-  { name: "Car Meets & Rallies", slug: "car-meets-rallies", showInFilter: true },
-  { name: "Commercial", slug: "commercial", showInFilter: true },
-  { name: "Social Cut", slug: "social-cut", showInFilter: false },
-];
-
-const PROJECTS = [
-  {
-    slug: "porsche-gt3-alpine-dusk", title: "ALPINE VELOCITY // GT3 DUSK RUN",
-    subtitle: "High-speed tracking film capturing mechanical aggression on wet tarmac", category: "Supercar Showcase",
-    vehicle: "Porsche 911 GT3 (992)", client: "Private Collector Commission", year: "2026", location: "Highland Pass, India",
-    heroImage: "/assets/projects/supercar-rolling.jpg",
-    brief: "Capture the pure atmospheric weight, aero balance, and high-RPM naturally aspirated flat-six scream of the 911 GT3 in transition from twilight to dusk.",
-    creativeDirection: "Moody, low-key lighting, wet road reflections, and high-speed chase-car tracking rigs paired with uncompressed external microphone audio captures.",
-    description: "Commissioned as an authentic archival film for a private enthusiast, this project emphasized visceral momentum over static beauty. Using custom hood suction mounts and gyro-stabilized pursuit cars, we captured dynamic 80mph rolling shots under rain-slicked pavement.",
-    services: ["Precision Tracking Vehicle Operation", "Anamorphic Cinematography", "Telemetry & Engine Sound Design", "Cinematic Master Delivery (4K 2.39:1)"],
-    techSpecs: { camera: "ARRI Alexa Mini LF / RED V-Raptor", lens: "Atlas Orion Anamorphic 35mm / 65mm", rig: "Tilta Hydra Arm + Ronin 2 Gyro Mount", resolution: "4K UHD (3840×1600)", framerate: "24fps & 60fps High-Speed", colorGrade: "ACES Film Emulation / Cool Cyan & Obsidian" },
-    gallery: [
-      { url: "/assets/projects/supercar-rolling.jpg", caption: "High-speed wet road tracking sequence", aspectRatio: "16/9" },
-      { url: "/assets/hero/hero-poster.jpg", caption: "Studio twilight silhouette and rim light study", aspectRatio: "21/9" },
-    ],
-  },
-  {
-    slug: "midnight-syndicate-car-meet", title: "MIDNIGHT SYNDICATE // CAR CULTURE FILM",
-    subtitle: "Underground car culture, JDM icons, and aftermovie documentary", category: "Car Meets & Rallies",
-    vehicle: "Tuned GT-Rs, Supras, European Performance Fleet", client: "National Automotive Collective", year: "2026", location: "Industrial District, Central India",
-    heroImage: "/assets/projects/car-meet.jpg",
-    brief: "Document the biggest gathering of tuner cars, track builds, and automotive community members with festival-grade visual energy and same-day social teasers.",
-    creativeDirection: "High-contrast neon reflections, handheld roving gimbals, smoke flares, and low-angle wide-angle focal lengths reflecting authentic street culture.",
-    description: "A comprehensive 12-hour production chronicling afternoon roll-ins through late-night rev battles and rolling convoys. Generated over 200K+ collective impressions across reels and YouTube within 48 hours of release.",
-    services: ["Multi-Camera Event Coverage", "Low-Altitude FPV Drone Chase", "Same-Night Viral Reel Dispatches", "Official 4K Festival Aftermovie"],
-    techSpecs: { camera: "Sony FX6 / FX3 Cinema Line", lens: "Sony G-Master 24-70mm f/2.8 & 16-35mm", rig: "DJI RS3 Pro Gimbal + Custom FPV Quad", resolution: "4K UHD (3840×2160)", framerate: "24fps / 120fps", colorGrade: "Neon Industrial Night Palette" },
-    gallery: [{ url: "/assets/projects/car-meet.jpg", caption: "Industrial warehouse roll-in lineup", aspectRatio: "16/9" }],
-  },
-  {
-    slug: "apex-carbon-commercial", title: "APEX MONOCHROME // BRAND FILM",
-    subtitle: "Commercial launch film for composite aerodynamic kit and bespoke forged wheels", category: "Commercial",
-    vehicle: "McLaren 720S Apex Edition", client: "Aerodynamic Aftermarket Brand", year: "2025", location: "Bhopal Studio Facility, India",
-    heroImage: "/assets/hero/hero-poster.jpg",
-    brief: "Highlight the precision weave of pre-preg carbon fiber aero components and bespoke center-lock wheel architecture for global commercial rollout.",
-    creativeDirection: "Volumetric fog, motorized linear slider tracking, rim-lighting revealing carbon textures, and architectural minimalism.",
-    description: "Engineered specifically for digital marketing conversion and brand authority, this film delivered 15-second paid ad variations, a 60-second flagship commercial, and high-resolution commercial print stills.",
-    services: ["Studio Commercial Direction", "Macro Carbon Fiber Cinematography", "Commercial Sound Scoring", "Omnichannel Multi-Aspect Export (16:9, 9:16, 1:1)"],
-    techSpecs: { camera: "RED V-Raptor 8K VV", lens: "Laowa Probe 24mm + Cooke Mini S4/i", rig: "Motion Control Motorized Track", resolution: "8K Raw Master / 4K Delivery", framerate: "24fps / 72fps", colorGrade: "Obsidian Deep Contrast Monochrome" },
-    gallery: [
-      { url: "/assets/hero/hero-poster.jpg", caption: "Volumetric fog commercial reveal", aspectRatio: "21/9" },
-      { url: "/assets/bts/camera-rig.jpg", caption: "Rig setup and follow-focus configuration", aspectRatio: "16/9" },
-    ],
-  },
-];
+// First-run content. Work, shorts and stats come from src/cms/youtube-snapshot.json
+// (refresh with `npm run youtube:sync`); the rest is starter copy to edit in the admin.
 
 const SERVICES = [
   {
@@ -96,21 +47,6 @@ const PROCESS = [
   { step: "04", title: "OMNICHANNEL DELIVERY", subtitle: "Cinematic 4K masters and viral social cuts", description: "Final deliverables are optimized and formatted for both massive theater/client screens (2.39:1 / 16:9) and high-retention mobile consumption (9:16 reels).", tasks: ["ProRes 422HQ & 4K UHD Web Exports", "Platform-Specific 9:16 Reels Cuts", "High-Res Still Photography Package"] },
 ];
 
-const CHANNEL = "https://www.youtube.com/@CARDYNASTY";
-const YOUTUBE = [
-  { title: "UNDERGROUND MEETS // THE RAW SPIRIT OF CENTRAL INDIA CAR CULTURE", category: "Car Culture", url: CHANNEL, duration: "14:22", badge: "Official Film" },
-  { title: "PORSCHE 911 GT3 // HIGH SPEED CHASE & PURE EXHAUST SYMPHONY", category: "Supercar Film", url: CHANNEL, duration: "08:45", badge: "Cinema Cut" },
-  { title: "MIDNIGHT CONVOY // 50+ SUPERCAR RALLY HIGHLIGHTS & ROLLING SHOTS", category: "Track & Meet", url: CHANNEL, duration: "12:10", badge: "Aftermovie" },
-  { title: "BEHIND THE LENS // HOW WE RIG CINEMA CAMERAS TO SUPERCAR HOODS", category: "Build Breakdown", url: CHANNEL, duration: "18:04", badge: "BTS Documentary" },
-];
-
-const STATS = [
-  { label: "Community", value: "16K+", detail: "YouTube Subscribers" },
-  { label: "Automotive Films", value: "200+", detail: "Produced & Directed" },
-  { label: "Reach", value: "Pan-India", detail: "Shoot Deployments" },
-  { label: "Production", value: "4K UHD", detail: "Anamorphic & Drone" },
-];
-
 const MEDIA_DIRS = ["hero", "projects", "bts", "creator", "brand", "cars", "events", "og"];
 const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".avif": "image/avif" };
 
@@ -142,15 +78,10 @@ export function seedIfEmpty(db: Db) {
     if (db.prepare("SELECT 1 FROM meta WHERE key = 'seeded'").get()) return;
     const now = new Date().toISOString();
 
-    const catIds = new Map<string, number>();
-    for (const c of CATEGORIES) catIds.set(c.name, insertRow(db, RESOURCES.categories, { ...c, published: true }));
-    for (const { category, ...p } of PROJECTS) {
-      insertRow(db, RESOURCES.projects, { ...p, categoryId: catIds.get(category) ?? null, videoUrl: "", seoTitle: "", seoDescription: "", featured: true, published: true });
-    }
+    // Projects, categories, YouTube shorts and stats come from the real channel snapshot.
+    applyContent(db, buildContent(snapshot));
     for (const s of SERVICES) insertRow(db, RESOURCES.services, { ...s, published: true });
     for (const s of PROCESS) insertRow(db, RESOURCES.process, { ...s, published: true });
-    for (const v of YOUTUBE) insertRow(db, RESOURCES.youtube, { ...v, published: true });
-    for (const s of STATS) insertRow(db, RESOURCES.stats, { ...s, published: true });
 
     const putSetting = db.prepare("INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES (?, ?, ?)");
     for (const def of Object.values(SECTIONS)) putSetting.run(def.key, JSON.stringify(def.defaults), now);
