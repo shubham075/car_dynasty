@@ -13,9 +13,6 @@ import { youtubeEmbed, youtubeId } from "@/lib/youtube";
 import {
   ArrowLeft,
   Camera,
-  MapPin,
-  Calendar,
-  Layers,
   CheckCircle2,
   MessageSquare,
   Sparkles,

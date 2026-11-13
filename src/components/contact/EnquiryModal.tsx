@@ -26,7 +26,7 @@ export function EnquiryModal({ config, brandName, ownerName, whatsapp, source, o
   const [showMore, setShowMore] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
-  const startedAt = useRef(Date.now());
+  const startedAt = useRef(0); // set when the modal mounts; bots that submit instantly are ignored
   const firstField = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -41,6 +41,10 @@ export function EnquiryModal({ config, brandName, ownerName, whatsapp, source, o
     deliverables: [] as string[],
     website: "", // honeypot — real visitors never see or fill this
   });
+
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, []);
 
   useEffect(() => {
     firstField.current?.focus();

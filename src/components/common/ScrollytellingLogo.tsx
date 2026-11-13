@@ -30,7 +30,7 @@ export function ScrollytellingLogo({
     const container = containerRef.current;
     const textEl = textRef.current;
 
-    let animationVars: gsap.TweenVars = {
+    const animationVars: gsap.TweenVars = {
       ease: "none",
       scrollTrigger: {
         trigger: container,

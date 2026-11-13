@@ -39,3 +39,6 @@ Thumbs.db
 
 # E2E throwaway database
 /data-e2e/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

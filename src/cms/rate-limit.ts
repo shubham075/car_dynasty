@@ -26,10 +26,22 @@ export function pruneRateLimits() {
   getDb().prepare("DELETE FROM rate_limits WHERE reset_at < ?").run(Date.now());
 }
 
+/**
+ * Client IP as seen by our own reverse proxy. Each proxy *appends* the address
+ * it received the request from, so only the right-most TRUSTED_PROXY_HOPS
+ * entries are trustworthy; anything further left can be forged by the client.
+ * Default 1 = a single proxy (nginx, Caddy, Railway, Fly…) in front of Next.
+ */
+export function clientIp(headers: Headers): string {
+  const hops = Math.max(1, Number(process.env.TRUSTED_PROXY_HOPS) || 1);
+  const chain = (headers.get("x-forwarded-for") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (chain.length) return chain[Math.max(0, chain.length - hops)];
+  return headers.get("x-real-ip")?.trim() || "unknown";
+}
+
 /** Visitors' IPs are never stored — only a salted hash, enough for abuse limits. */
 export function ipHash(headers: Headers): string {
-  const fwd = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = fwd || headers.get("x-real-ip") || "unknown";
+  const ip = clientIp(headers);
   const salt = (getDb().prepare("SELECT value FROM meta WHERE key = 'ip_salt'").get() as { value: string } | undefined)?.value ?? "";
   return crypto.createHash("sha256").update(`${salt}:${ip}`).digest("hex").slice(0, 32);
 }
